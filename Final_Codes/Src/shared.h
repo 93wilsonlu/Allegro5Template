@@ -3,8 +3,8 @@
 
 #ifndef SCENE_SHARED_H
 #define SCENE_SHARED_H
-#include <allegro5/allegro_font.h>
 #include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_font.h>
 
 // TODO-IF: Shared constant variable (without initializing value).
 

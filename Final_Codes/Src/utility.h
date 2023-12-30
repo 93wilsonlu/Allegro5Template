@@ -6,8 +6,8 @@
 #ifndef SCENE_UTILITY_H
 #define SCENE_UTILITY_H
 #include <allegro5/allegro.h>
-#include <allegro5/allegro_font.h>
 #include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_font.h>
 
 /* Utility functions */
 
@@ -28,61 +28,60 @@ ALLEGRO_FONT* load_font(const char* filename, int size);
 ALLEGRO_BITMAP* load_bitmap(const char* filename);
 // Load resized bitmap and check if failed.
 ALLEGRO_BITMAP* load_bitmap_resized(const char* filename, int w, int h);
-typedef struct RecArea{
-	float x, y, w, h;
+typedef struct RecArea {
+    float x, y, w, h;
 } RecArea;
 typedef struct Pair_IntInt {
-	int x;
-	int y;
+    int x;
+    int y;
 } Pair_IntInt;
-typedef enum Directions{
-	NONE = 0,
-	UP = 1,
-	LEFT = 2,
-	RIGHT = 3,
-	DOWN = 4,
-	UP_DOWN = 5,
-	LEFT_RIGHT = 6,
-	UP_LEFT = 7,
-	DOWN_LEFT = 8,
-	DOWN_RIGHT = 9,
-	UP_RIGHT = 10
+typedef enum Directions {
+    NONE = 0,
+    UP = 1,
+    LEFT = 2,
+    RIGHT = 3,
+    DOWN = 4,
+    UP_DOWN = 5,
+    LEFT_RIGHT = 6,
+    UP_LEFT = 7,
+    DOWN_LEFT = 8,
+    DOWN_RIGHT = 9,
+    UP_RIGHT = 10
 } Directions;
 typedef struct object {
-	Pair_IntInt Coord; // 
-	Pair_IntInt Size; // x for width, y for height
-	Directions facing;
-	Directions preMove;
-	Directions nextTryMove;
-	uint32_t moveCD;				// movement CountDown
+    Pair_IntInt Coord;  //
+    Pair_IntInt Size;   // x for width, y for height
+    Directions facing;
+    Directions preMove;
+    Directions nextTryMove;
+    uint32_t moveCD;  // movement CountDown
 } object;
 
-typedef struct bitmapdata{
-	int bitmap_x;
-	int bitmap_y;
-	int bitmap_w;
-	int bitmap_h;
+typedef struct bitmapdata {
+    int bitmap_x;
+    int bitmap_y;
+    int bitmap_w;
+    int bitmap_h;
 } bitmapdata;
 
-//extern const int GridSize;
+// extern const int GridSize;
 
-void setRecArea(RecArea *RA, float x, float y, float w, float h);
-RecArea getDrawArea(object *obj, uint32_t TICK);
-bool RecAreaOverlap(const RecArea *const RA, const RecArea *const RB);
-void printRecAreaInfo(const RecArea *RA);
+void setRecArea(RecArea* RA, float x, float y, float w, float h);
+RecArea getDrawArea(object* obj, uint32_t TICK);
+bool RecAreaOverlap(const RecArea* const RA, const RecArea* const RB);
+void printRecAreaInfo(const RecArea* RA);
 void printDirection(const Directions a);
 bool movetime(int speed);
 uint32_t generateRandomNumber(uint32_t a, uint32_t b);
 double generateRandomFloat(void);
-bool bernoulliTrail(double p); // Given a Possibility and decided if occur.
-// TODO-HACKATHON 3-4: Declaration of pnt_int_rect 
+bool bernoulliTrail(double p);  // Given a Possibility and decided if occur.
+// TODO-HACKATHON 3-4: Declaration of pnt_int_rect
 // Determines whether the point (px, py) is in rect (x, y, w, h).
 // Uncomment the code below.
 /*
 bool pnt_in_rect(int px, int py, RecArea field);
 */
 // -------------------------
-
 
 // TODO-IF: More functions that can be shared across different scenes.
 #endif
