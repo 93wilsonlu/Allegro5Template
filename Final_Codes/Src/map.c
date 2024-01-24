@@ -69,19 +69,18 @@ Map* create_map(const char* filepath) {
         // fopen reference: https://man7.org/linux/man-pages/man3/fopen.3.html
         // use pFile and fscanf to read from file, just like read from standard
         // input.
-        /*
+
         game_log("%s\n", filepath);
-        pFile = fopen(...);
+        pFile = fopen(filepath, "r");
         if (!pFile) {
-                game_abort("error to open map file\n");
-                return NULL;
+            game_abort("error to open map file\n");
+            return NULL;
         }
-        if(fscanf(...) != 2) {
-                game_abort("Map format unmatched\n");
-                return NULL;
+        if (fscanf(pFile, "%d %d", &(M->row_num), &(M->col_num)) != 2) {
+            game_abort("Map format unmatched\n");
+            return NULL;
         }
-        while(getc(pFile) != '\n'){};
-        */
+        getc(pFile);
     }
 
     /*
@@ -114,9 +113,7 @@ Map* create_map(const char* filepath) {
                 // '.' -> beans
                 // 'B' -> room of ghost
                 // 'P' -> Power Bean
-                /*
-                fscanf(...);
-                */
+                fscanf(pFile, "%c", &(M->map[i][j]));
             }
             switch (M->map[i][j]) {
                 case '#':
@@ -129,9 +126,7 @@ Map* create_map(const char* filepath) {
                     break;
             }
         }
-        if (filepath != NULL)
-            while (getc(pFile) != '\n') {
-            };
+        getc(pFile);
     }
     M->beansNum = M->beansCount;
     return M;
@@ -141,14 +136,13 @@ void delete_map(Map* M) {
     if (!M)
         return;
     // TODO-GC-memory: free the dynamic allocated part of Map* M at here;
-    /*
-    if(M->map)
-    {
-            ...
-            free(...)
-            ...
+
+    if (M->map) {
+        for (int i = 0; i < M->row_num; i++) {
+            free(M->map[i]);
+        }
+        free(M->map);
     }
-    */
     free(M);
 }
 
@@ -164,12 +158,12 @@ void draw_map(Map const* M) {
                 case '#':
                     draw_block_index(M, row, col);
                     break;
+
                 // TODO-PB: draw the power bean
-                /*
                 case 'P':
-                        draw_power_bean(...);
-                        break;
-                */
+                    draw_power_bean(M, row, col);
+                    break;
+
                 case '.':
                     draw_bean(M, row, col);
                     break;

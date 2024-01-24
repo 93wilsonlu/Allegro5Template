@@ -22,10 +22,10 @@ pacman: $(objects)
 	$(CC) -lm $(CCFLAGS) $(DBG) -o pacman $^
 
 %.o: $(SRC)/%.c $(SRC)/%.h
-	$(CC) -I$(INCLUDE) -c $< -o $@
+	$(CC) -I$(INCLUDE) $(DBG) -c $< -o $@
 
 %.o: $(SRC)/%.c
-	$(CC) -I$(INCLUDE) -c $< -o $@
+	$(CC) -I$(INCLUDE) $(DBG) -c $< -o $@
 
 clean:
 	rm pacman *.o

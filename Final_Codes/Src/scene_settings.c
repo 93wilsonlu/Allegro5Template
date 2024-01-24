@@ -1,6 +1,3 @@
-// TODO-HACKATHON 3-9: Create scene_settings.h and scene_settings.c.
-// No need to do anything for this part. We've already done it for
-// you, so this 2 files is like the default scene template.
 #include "scene_settings.h"
 
 // Variables and functions with 'static' prefix at the top level of a

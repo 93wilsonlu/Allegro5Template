@@ -3,6 +3,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "map.h"
 #include "pacman_obj.h"
+#include "scene_game.h"
 
 /* global variables*/
 // [ NOTE ]
@@ -54,10 +55,22 @@ Ghost* ghost_create(int flag) {
             ghost->move_sprite = load_bitmap("Assets/ghost_move_red.png");
             ghost->move_script = &ghost_move_script_random;
             break;
+        case Inky:
+            ghost->objData.Coord.x = cage_grid_x - 1;
+            ghost->objData.Coord.y = cage_grid_y + 1;
+            ghost->move_sprite = load_bitmap("Assets/ghost_move_blue.png");
+            ghost->move_script = &ghost_move_script_random;
+            break;
+        case Clyde:
+            ghost->objData.Coord.x = cage_grid_x + 1;
+            ghost->objData.Coord.y = cage_grid_y + 1;
+            ghost->move_sprite = load_bitmap("Assets/ghost_move_orange.png");
+            ghost->move_script = &ghost_move_script_random;
+            break;
         case Pinky:
             // *load move script of shortest_path
             ghost->objData.Coord.x = cage_grid_x;
-            ghost->objData.Coord.y = cage_grid_y;
+            ghost->objData.Coord.y = cage_grid_y + 1;
             ghost->move_sprite = load_bitmap("Assets/ghost_move_pink.png");
             ghost->move_script = &ghost_move_script_shortest_path;
             break;
@@ -72,20 +85,14 @@ Ghost* ghost_create(int flag) {
 }
 void ghost_destory(Ghost* ghost) {
     // TODO-GC-memory: free ghost resource
-
-    /*
-            al_destory_bitmap(...);
-            ...
-            free(ghost);
-    */
+    al_destroy_bitmap(ghost->dead_sprite);
+    al_destroy_bitmap(ghost->flee_sprite);
+    al_destroy_bitmap(ghost->move_sprite);
+    free(ghost);
 }
+
 void ghost_draw(Ghost* ghost) {
     RecArea drawArea = getDrawArea((object*)ghost, GAME_TICK_CD);
-
-    // Draw default image
-    al_draw_scaled_bitmap(
-        ghost->move_sprite, 0, 0, 16, 16, drawArea.x + fix_draw_pixel_offset_x,
-        drawArea.y + fix_draw_pixel_offset_y, draw_region, draw_region, 0);
 
     // Draw ghost according to its status and use ghost->objData.moveCD value to
     // determine which frame of the animation to draw. hint: please refer
@@ -96,50 +103,111 @@ void ghost_draw(Ghost* ghost) {
     if (ghost->status == FLEE) {
         // TODO-PB-animation: ghost FLEE animation, draw blue flee sprites,
         //						 while time is running
-        //out, alternatively draw blue and white flee sprites.
+        // out, alternatively draw blue and white flee sprites.
         // *draw ghost->flee_sprite
         /* hint: try to add some function in scene_game.h and scene_game.c that
                 gets the value of `power_up_timer` and `power_up_duration`.
         */
-        /*
-                if (it has run out of 70% of the time of power mode  )
-                {
-                        // alternately draw blue and white sprites
-                        if (ghost->objData.moveCD >> 4)& 1) {
-                                bitmap_x_offset = ...;
-                        }
-                        al_draw_scaled_bitmap(...)
-                }
-                else
-                {
-                        // draw only blue sprite
-                        al_draw_scaled_bitmap(...)
-                }
-        */
+
+        if (get_power_up_timer_tick() * 10 >= get_power_up_duration() * 7) {
+            // alternately draw blue and white sprites
+            bitmap_x_offset = 16 * ((ghost->objData.moveCD >> 4) & 3);
+            al_draw_scaled_bitmap(ghost->flee_sprite, bitmap_x_offset, 0, 16,
+                                  16, drawArea.x + fix_draw_pixel_offset_x,
+                                  drawArea.y + fix_draw_pixel_offset_y,
+                                  draw_region, draw_region, 0);
+        } else {
+            // draw only blue sprite
+            al_draw_scaled_bitmap(ghost->flee_sprite, bitmap_x_offset, 0, 16,
+                                  16, drawArea.x + fix_draw_pixel_offset_x,
+                                  drawArea.y + fix_draw_pixel_offset_y,
+                                  draw_region, draw_region, 0);
+        }
+
     } else if (ghost->status == GO_IN) {
         // TODO-PB-animation: ghost going animation
         // *draw ghost->dead_sprite
-        /*
-        switch (ghost->objData.facing)
-        {
-        case LEFT:
-                ...
-        */
+
+        switch (ghost->objData.facing) {
+            case LEFT:
+                al_draw_scaled_bitmap(ghost->dead_sprite, 16, 0, 16, 16,
+                                      drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+                break;
+            case RIGHT:
+                al_draw_scaled_bitmap(ghost->dead_sprite, 0, 0, 16, 16,
+                                      drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+                break;
+            case UP:
+                al_draw_scaled_bitmap(ghost->dead_sprite, 32, 0, 16, 16,
+                                      drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+                break;
+            case DOWN:
+                al_draw_scaled_bitmap(ghost->dead_sprite, 48, 0, 16, 16,
+                                      drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+                break;
+            default:
+                al_draw_scaled_bitmap(ghost->dead_sprite, 0, 0, 16, 16,
+                                      drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+        }
     } else {
         // TODO-GC-animation: ghost animation
         // *draw ghost->move_sprite
-        /*
-        switch (ghost->objData.facing)
-        {
-        case LEFT:
-                ...
+
+        int offset = 0;
+
+        if ((ghost->objData.moveCD >> 5) & 1 == 0) {
+            offset = 0;
+        } else if ((ghost->objData.moveCD >> 5) & 1 == 1) {
+            offset = 16;
         }
-        */
+        switch (ghost->objData.facing) {
+            case LEFT:
+                al_draw_scaled_bitmap(ghost->move_sprite, 32 + offset, 0, 16,
+                                      16, drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+                break;
+            case RIGHT:
+                al_draw_scaled_bitmap(ghost->move_sprite, 0 + offset, 0, 16, 16,
+                                      drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+                break;
+            case UP:
+                al_draw_scaled_bitmap(ghost->move_sprite, 64 + offset, 0, 16,
+                                      16, drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+                break;
+            case DOWN:
+                al_draw_scaled_bitmap(ghost->move_sprite, 96 + offset, 0, 16,
+                                      16, drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+                break;
+            default:
+                al_draw_scaled_bitmap(ghost->move_sprite, 0, 0, 16, 16,
+                                      drawArea.x + fix_draw_pixel_offset_x,
+                                      drawArea.y + fix_draw_pixel_offset_y,
+                                      draw_region, draw_region, 0);
+        }
     }
 }
+
 void ghost_NextMove(Ghost* ghost, Directions next) {
     ghost->objData.nextTryMove = next;
 }
+
 void printGhostStatus(GhostStatus S) {
     switch (S) {
         case BLOCKED:  // stay inside the ghost room
@@ -165,37 +233,33 @@ void printGhostStatus(GhostStatus S) {
 bool ghost_movable(const Ghost* ghost,
                    const Map* M,
                    Directions targetDirec,
-                   bool room) {
-    // TODO-HACKATHON 2-3: Determine if the current direction is movable.
-    // Basically, this is a ghost version of `pacman_movable`.
-    // So if you have finished (and you should), you can just "copy and paste"
-    // and do some small alternation.
+                   bool disallow_room) {
+    int x, y;
 
-    /*
-    ... ghost->objData.Coord.x, ... ghost->objData.Coord.y;
-
-    switch (targetDirec)
-    {
-    case UP:
-            ...
+    switch (targetDirec) {
+        case UP:
+            x = ghost->objData.Coord.x;
+            y = ghost->objData.Coord.y - 1;
             break;
-    case DOWN:
-            ...
+        case DOWN:
+            x = ghost->objData.Coord.x;
+            y = ghost->objData.Coord.y + 1;
             break;
-    case LEFT:
-            ...
+        case LEFT:
+            x = ghost->objData.Coord.x - 1;
+            y = ghost->objData.Coord.y;
             break;
-    case RIGHT:
-            ...
+        case RIGHT:
+            x = ghost->objData.Coord.x + 1;
+            y = ghost->objData.Coord.y;
             break;
-    default:
+        default:
             // for none UP, DOWN, LEFT, RIGHT direction u should return false.
             return false;
     }
 
-    if (is_wall_block(M, ..., ...) || (room && is_room_block(M, ..., ...)))
-            return false;
-    */
+    if (is_wall_block(M, x, y) || (disallow_room && is_room_block(M, x, y)))
+        return false;
 
     return true;
 }
@@ -206,21 +270,20 @@ void ghost_toggle_FLEE(Ghost* ghost, bool setFLEE) {
     // will change to state FLEE. For those who are not (BLOCK, GO_IN, etc.),
     // they won't change state. Spec above is based on the classic PACMAN game.
     // setFLEE = true => set to FLEE, setFLEE = false => reset to FREEDOM
-    /*
-    if(setFLEE){
-            // set FREEDOM ghost's status to FLEE and make them slow
-            if(... == FREEDOM){
-                    ...
-                    ghost->speed = 1;
-            }
-    }else{
-            // set FLEE ghost's status to FREESOME and them down
-            if(... == FLEE){
-                    ...
-                    ghost->speed = 2;
-            }
+
+    if (setFLEE) {
+        // set FREEDOM ghost's status to FLEE and make them slow
+        if (ghost->status == FREEDOM) {
+            ghost->status = FLEE;
+            ghost->speed = 1;
+        }
+    } else {
+        // set FLEE ghost's status to FREEDOM and them down
+        if (ghost->status == FLEE) {
+            ghost->status = FREEDOM;
+            ghost->speed = 2;
+        }
     }
-    */
 }
 
 void ghost_collided(Ghost* ghost) {

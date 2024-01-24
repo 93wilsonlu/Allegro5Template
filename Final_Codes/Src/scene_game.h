@@ -7,9 +7,11 @@
 #include "game.h"
 
 Scene scene_main_create(void);
-/*
+
 int64_t get_power_up_timer_tick();
 int64_t get_power_up_duration();
-*/
+
+extern bool cheat_ghost_stop;
+extern bool cheat_pacman_cross;
 
 #endif

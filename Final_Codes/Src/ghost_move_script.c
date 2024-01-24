@@ -2,6 +2,7 @@
 #include "ghost.h"
 #include "map.h"
 #include "pacman_obj.h"
+#include "scene_game.h"
 /* Shared variables */
 #define GO_OUT_TIME 256
 extern uint32_t GAME_TICK_CD;
@@ -24,17 +25,6 @@ static void ghost_move_script_FLEE(Ghost* ghost,
                                    const Pacman* const pacman);
 
 static void ghost_move_script_FREEDOM_random(Ghost* ghost, Map* M) {
-    // TODO-HACKATHON 2-4: Uncomment the following code and finish pacman
-    // picking random direction. hint: see generateRandomNumber in utility.h
-
-    /*
-    static Directions proba[4]; // possible movement
-    int cnt = 0;
-    for (Directions i = 1; i <= 4; i++)
-            if (ghost_movable(...)) 	proba[cnt++] = i;
-    ghost_NextMove(ghost, proba[generateRandomNumber(...)]);
-    */
-
     // TODO-GC-random_movement: (Not in Hackathon)
     // Description:
     // For red(Blinky) ghost, we ask you to implement an random strategy ghost,
@@ -44,25 +34,35 @@ static void ghost_move_script_FREEDOM_random(Ghost* ghost, Map* M) {
     // Replace the above code by finish followings.
     // hint: record the previous move, and skip it when adding direction into
     // array proba
-    /*
+
     Directions counter_one = RIGHT;
-    switch(ghost->objData.preMove) {
-            case RIGHT:
-                    counter_one = LEFT;
-                    break;
-            case ...
+    switch (ghost->objData.preMove) {
+        case RIGHT:
+            counter_one = LEFT;
+            break;
+        case LEFT:
+            counter_one = RIGHT;
+            break;
+        case UP:
+            counter_one = DOWN;
+            break;
+        case DOWN:
+            counter_one = UP;
+            break;
     }
 
-    static Directions proba[4]; // possible movement
+    static Directions proba[4];  // possible movement
     int cnt = 0;
-    for (Directions i = 1; i <= 4; i++)
-            if (i != counter_one && ghost_movable(...)) 	proba[cnt++] =
-    i; if (cnt >= 1) { ghost_NextMove(ghost, proba[generateRandomNumber(...)]);
+    for (Directions i = 1; i <= 4; i++) {
+        if (i != counter_one && ghost_movable(ghost, M, i, true)) {
+            proba[cnt++] = i;
+        }
     }
-    else { // for the dead end case
-            ghost_NextMove(ghost, ...);
+    if (cnt >= 1) {
+        ghost_NextMove(ghost, proba[generateRandomNumber(0, cnt - 1)]);
+    } else {  // for the dead end case
+        ghost_NextMove(ghost, counter_one);
     }
-    */
 }
 
 static void ghost_move_script_FREEDOM_shortest_path(Ghost* ghost,
@@ -127,11 +127,44 @@ static void ghost_move_script_FLEE(Ghost* ghost,
     // We first get the direction to shortest path to pacman, call it K (K is
     // either UP, DOWN, RIGHT or LEFT). Then we choose other available direction
     // rather than direction K. In this way, ghost will escape from pacman.
+
+    Directions counter_one = RIGHT;
+    switch (ghost->objData.preMove) {
+        case RIGHT:
+            counter_one = LEFT;
+            break;
+        case LEFT:
+            counter_one = RIGHT;
+            break;
+        case UP:
+            counter_one = DOWN;
+            break;
+        case DOWN:
+            counter_one = UP;
+            break;
+    }
+
+    static Directions proba[4];  // possible movement
+    int cnt = 0;
+    for (Directions i = 1; i <= 4; i++) {
+        if (i != counter_one && i != shortestDirection &&
+            ghost_movable(ghost, M, i, true)) {
+            proba[cnt++] = i;
+        }
+    }
+    if (cnt >= 1) {
+        ghost_NextMove(ghost, proba[generateRandomNumber(0, cnt - 1)]);
+    } else {  // for the dead end case
+        ghost_NextMove(ghost, counter_one);
+    }
 }
 
 void ghost_move_script_random(Ghost* ghost, Map* M, Pacman* pacman) {
     if (!movetime(ghost->speed))
         return;
+    if (cheat_ghost_stop) {
+        return;
+    }
     switch (ghost->status) {
         case BLOCKED:
             ghost_move_script_BLOCKED(ghost, M);
@@ -190,6 +223,9 @@ void ghost_move_script_shortest_path(Ghost* ghost, Map* M, Pacman* pacman) {
     // to win this. hint: Do shortest path sometime and do random move sometime.
     if (!movetime(ghost->speed))
         return;
+    if (cheat_ghost_stop) {
+        return;
+    }
     switch (ghost->status) {
         case BLOCKED:
             ghost_move_script_BLOCKED(ghost, M);
@@ -198,7 +234,11 @@ void ghost_move_script_shortest_path(Ghost* ghost, Map* M, Pacman* pacman) {
                 ghost->status = GO_OUT;
             break;
         case FREEDOM:
-            ghost_move_script_FREEDOM_shortest_path(ghost, M, pacman);
+            if (generateRandomNumber(0, 99) < 30) {
+                ghost_move_script_FREEDOM_random(ghost, M);
+            } else {
+                ghost_move_script_FREEDOM_shortest_path(ghost, M, pacman);
+            }
             break;
         case GO_OUT:
             ghost_move_script_GO_OUT(ghost, M);

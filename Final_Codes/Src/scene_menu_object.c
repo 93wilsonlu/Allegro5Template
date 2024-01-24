@@ -44,10 +44,5 @@ void drawButton(Button button) {
 }
 
 bool buttonHover(Button button, int mouse_x, int mouse_y) {
-    // TODO-HACKATHON 3-6: Check if mouse is hovering on the button
-    //	Uncomment and fill the code below
-    /*
-    return pnt_in_rect(...);
-    */
-    return false;
+    return pnt_in_rect(mouse_x, mouse_y, button.body);
 }
